@@ -49,11 +49,34 @@ module AjaxDatatablesRails
 
       def aggregate_query
         conditions = view_columns.each_with_index.map do |column, index|
-          value = params[:columns]["#{index}"][:search][:value] if params[:columns]
-          regex = params[:columns]["#{index}"][:search][:regex] == 'true' if params[:columns]
-          search_condition(column, value, regex) unless value.blank?
+          build_normal_search_condition(column, index)
         end
+        conditions << build_date_range_search_condition
         conditions.compact.reduce(:and)
+      end
+
+      def build_normal_search_condition(column, index)
+        value = params[:columns]["#{index}"][:search][:value] if params[:columns]
+        regex = params[:columns]["#{index}"][:search][:regex] == 'true' if params[:columns]
+        search_condition(column, value, regex) unless value.blank?
+      end
+
+      def build_date_range_search_condition
+        if date_range_present?
+          date_range_column = view_columns[params[:date_range][:column].to_i]
+          model, column = date_range_column.split('.')
+          table = get_table(model)
+
+          case
+          when only_start_date_present?
+            build_date_greater_or_less_query(true, table, column)
+          when only_end_date_present?
+            build_date_greater_or_less_query(false, table, column)
+          when both_start_and_end_date_present?
+            build_date_range_query(table, column)
+          end
+
+        end
       end
 
       def search_condition(column, value, regex=false)
@@ -83,15 +106,68 @@ module AjaxDatatablesRails
         end
       end
 
+      def cast_column(table, column)
+        ::Arel::Nodes::NamedFunction.new(
+          'CAST', [table[column.to_sym].as(typecast)]
+        )
+      end
+
       def regex_search(table, column, value)
         ::Arel::Nodes::Regexp.new(table[column.to_sym], ::Arel::Nodes.build_quoted(value))
       end
 
       def non_regex_search(table, column, value)
-        casted_column = ::Arel::Nodes::NamedFunction.new(
-          'CAST', [table[column.to_sym].as(typecast)]
-        )
+        casted_column = cast_column(table, column)
         casted_column.matches("%#{value}%")
+      end
+
+      def date_range_present?
+        params[:date_range].present?
+      end
+
+      def get_date_for_date_range(date)
+        Time.parse(date)
+      rescue
+        nil
+      end
+
+      def only_start_date_present?
+        get_date_for_date_range(params[:date_range][:start]) && get_date_for_date_range(params[:date_range][:end]).nil?
+      end
+
+      def only_end_date_present?
+        get_date_for_date_range(params[:date_range][:end]) && get_date_for_date_range(params[:date_range][:start]).nil?
+      end
+
+      def both_start_and_end_date_present?
+        get_date_for_date_range(params[:date_range][:start]) && get_date_for_date_range(params[:date_range][:end])
+      end
+
+      def build_date_greater_or_less_query(greater_than, table, column)
+        if greater_than
+          greater_than_or_equal_query(table, column, get_date_for_date_range(params[:date_range][:start]))
+        else
+          less_than_or_equal_query(table, column, get_date_for_date_range(params[:date_range][:end]))
+        end
+      end
+
+      def build_date_range_query(table, column)
+        between_query(table, column, get_date_for_date_range(params[:date_range][:start]), get_date_for_date_range(params[:date_range][:end]))
+      end
+
+      def greater_than_or_equal_query(table, column, value)
+        casted_column = cast_column(table, column)
+        casted_column.gteq(value)
+      end
+
+      def less_than_or_equal_query(table, column, value)
+        casted_column = cast_column(table, column)
+        casted_column.lteq(value)
+      end
+
+      def between_query(table, column, start_value, end_value)
+        casted_column = cast_column(table, column)
+        casted_column.between(start_value..end_value)
       end
 
       # ----------------- SORT HELPER METHODS --------------------
