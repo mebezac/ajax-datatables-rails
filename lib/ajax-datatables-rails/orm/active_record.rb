@@ -126,7 +126,7 @@ module AjaxDatatablesRails
       end
 
       def get_date_for_date_range(date, time_zone='GMT')
-        Time.parse(date).time_zone(time_zone)
+        Date.strptime(date, '%d/%m/%Y').in_time_zone(Nokogiri::HTML.parse(time_zone).text)
       rescue
         nil
       end
