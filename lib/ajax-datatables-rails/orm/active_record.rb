@@ -125,34 +125,34 @@ module AjaxDatatablesRails
         params[:date_range].present?
       end
 
-      def get_date_for_date_range(date)
-        Time.parse(date)
+      def get_date_for_date_range(date, time_zone='GMT')
+        Time.parse(date).time_zone(time_zone)
       rescue
         nil
       end
 
       def only_start_date_present?
-        get_date_for_date_range(params[:date_range][:start]) && get_date_for_date_range(params[:date_range][:end]).nil?
+        get_date_for_date_range(params[:date_range][:start], params[:date_range][:time_zone]) && get_date_for_date_range(params[:date_range][:end], params[:date_range][:time_zone]).nil?
       end
 
       def only_end_date_present?
-        get_date_for_date_range(params[:date_range][:end]) && get_date_for_date_range(params[:date_range][:start]).nil?
+        get_date_for_date_range(params[:date_range][:end], params[:date_range][:time_zone]) && get_date_for_date_range(params[:date_range][:start], params[:date_range][:time_zone]).nil?
       end
 
       def both_start_and_end_date_present?
-        get_date_for_date_range(params[:date_range][:start]) && get_date_for_date_range(params[:date_range][:end])
+        get_date_for_date_range(params[:date_range][:start], params[:date_range][:time_zone]) && get_date_for_date_range(params[:date_range][:end], params[:date_range][:time_zone])
       end
 
       def build_date_greater_or_less_query(greater_than, table, column)
         if greater_than
-          greater_than_or_equal_query(table, column, get_date_for_date_range(params[:date_range][:start]))
+          greater_than_or_equal_query(table, column, get_date_for_date_range(params[:date_range][:start], params[:date_range][:time_zone]))
         else
-          less_than_or_equal_query(table, column, get_date_for_date_range(params[:date_range][:end]))
+          less_than_or_equal_query(table, column, get_date_for_date_range(params[:date_range][:end], params[:date_range][:time_zone]))
         end
       end
 
       def build_date_range_query(table, column)
-        between_query(table, column, get_date_for_date_range(params[:date_range][:start]), get_date_for_date_range(params[:date_range][:end]))
+        between_query(table, column, get_date_for_date_range(params[:date_range][:start], params[:date_range][:time_zone]), get_date_for_date_range(params[:date_range][:end], params[:date_range][:time_zone]))
       end
 
       def greater_than_or_equal_query(table, column, value)
