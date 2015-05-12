@@ -125,34 +125,39 @@ module AjaxDatatablesRails
         params[:date_range].present?
       end
 
-      def get_date_for_date_range(date, time_zone='GMT')
-        Date.strptime(date, '%d/%m/%Y').in_time_zone(Nokogiri::HTML.parse(time_zone).text)
+      def get_date_for_date_range(date, time_zone='GMT', end_date=false)
+        if end_date
+          Date.strptime(date, '%d/%m/%Y').in_time_zone(Nokogiri::HTML.parse(time_zone).text) + 23.hours + 59.minutes + 59.seconds
+        else
+          Date.strptime(date, '%d/%m/%Y').in_time_zone(Nokogiri::HTML.parse(time_zone).text)
+        end
+
       rescue
         nil
       end
 
       def only_start_date_present?
-        get_date_for_date_range(params[:date_range][:start], params[:date_range][:time_zone]) && get_date_for_date_range(params[:date_range][:end], params[:date_range][:time_zone]).nil?
+        get_date_for_date_range(params[:date_range][:start], params[:date_range][:time_zone]) && get_date_for_date_range(params[:date_range][:end], params[:date_range][:time_zone], true).nil?
       end
 
       def only_end_date_present?
-        get_date_for_date_range(params[:date_range][:end], params[:date_range][:time_zone]) && get_date_for_date_range(params[:date_range][:start], params[:date_range][:time_zone]).nil?
+        get_date_for_date_range(params[:date_range][:end], params[:date_range][:time_zone], true) && get_date_for_date_range(params[:date_range][:start], params[:date_range][:time_zone]).nil?
       end
 
       def both_start_and_end_date_present?
-        get_date_for_date_range(params[:date_range][:start], params[:date_range][:time_zone]) && get_date_for_date_range(params[:date_range][:end], params[:date_range][:time_zone])
+        get_date_for_date_range(params[:date_range][:start], params[:date_range][:time_zone]) && get_date_for_date_range(params[:date_range][:end], params[:date_range][:time_zone], true)
       end
 
       def build_date_greater_or_less_query(greater_than, table, column)
         if greater_than
           greater_than_or_equal_query(table, column, get_date_for_date_range(params[:date_range][:start], params[:date_range][:time_zone]))
         else
-          less_than_or_equal_query(table, column, get_date_for_date_range(params[:date_range][:end], params[:date_range][:time_zone]))
+          less_than_or_equal_query(table, column, get_date_for_date_range(params[:date_range][:end], params[:date_range][:time_zone], true))
         end
       end
 
       def build_date_range_query(table, column)
-        between_query(table, column, get_date_for_date_range(params[:date_range][:start], params[:date_range][:time_zone]), get_date_for_date_range(params[:date_range][:end], params[:date_range][:time_zone]))
+        between_query(table, column, get_date_for_date_range(params[:date_range][:start], params[:date_range][:time_zone]), get_date_for_date_range(params[:date_range][:end], params[:date_range][:time_zone], true))
       end
 
       def greater_than_or_equal_query(table, column, value)
