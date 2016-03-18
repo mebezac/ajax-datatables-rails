@@ -90,6 +90,12 @@ describe AjaxDatatablesRails::Base do
       end
     end
 
+    describe 'default additional sort' do
+      it 'raises an error if it does not include an ORM module' do
+        expect { datatable.send(:default_additional_sort) }.to raise_error
+      end
+    end
+
     describe 'paginate records' do
       it 'raises an error if it does not include an ORM module' do
         expect { datatable.send(:paginate_records) }.to raise_error
@@ -130,6 +136,64 @@ describe AjaxDatatablesRails::Base do
           datatable = AjaxDatatablesRails::Base.new(other_view)
           expect(datatable.send(:per_page)).to eq(20)
         end
+      end
+    end
+
+    context '#default_additional_sort' do
+      let(:view) { double('view', params: sample_params) }
+      let(:datatable) { ActiveRecordSampleDatatable.new(view) }
+
+      before(:each) do
+        create_many_sample_users
+      end
+
+      it 'defaults to ascending' do
+        # set additional default sort
+        datatable.config.default_additional_sort = 'an_int'
+
+        # set to order Users by column_with_single_value in ascending order
+        datatable.params[:order]['0'] = { column: '4', dir: 'asc' }
+        expect(datatable.records.limit(2).map(&:email)).to match(
+          ["johndoe00@example.com", "msmith01@example.com"]
+        )
+      end
+
+      it "parses the sort order" do
+        # set additional default sort
+        datatable.config.default_additional_sort = 'an_int.desc'
+
+        # set to order Users by email in descending order
+        datatable.params[:order]['0'] = { column: '1', dir: 'desc' }
+        expect(datatable.records.limit(2).map(&:email)).to match(
+          ["msmith49@example.com", "msmith47@example.com"]
+        )
+      end
+
+      it 'ignores column sorting when the table does not contain the column' do
+        # set additional default sort
+        datatable.config.default_additional_sort = 'an_attribute_that_does_not_exist.desc'
+
+        # set to order Users by column_with_single_value in ascending order
+        datatable.params[:order]['0'] = { column: '1', dir: 'asc' }
+        expect(datatable.records.limit(2).map(&:email)).to match(
+          ["johndoe00@example.com", "johndoe02@example.com"]
+        )
+      end
+
+      it 'uses just the default sort' do
+        datatable.config.default_additional_sort = 'an_int'
+        datatable.params.delete "order"
+        expect(datatable.records.limit(2).map(&:email)).to match(
+          ["johndoe00@example.com", "msmith01@example.com"]
+        )
+      end
+
+      it 'parses multiple defaults' do
+        datatable.config.default_additional_sort = 'column_with_single_value.desc,an_int'
+        datatable.params.delete "order"
+        expect(datatable.records.limit(2).map(&:email)).to match(
+          ["johndoe00@example.com", "msmith01@example.com"]
+        )
       end
     end
   end

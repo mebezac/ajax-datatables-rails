@@ -20,5 +20,6 @@ module AjaxDatatablesRails
 
     config_accessor(:orm) { :active_record }
     config_accessor(:db_adapter) { :pg }
+    config_accessor(:default_additional_sort) { nil }
   end
 end

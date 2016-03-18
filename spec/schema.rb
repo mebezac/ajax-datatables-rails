@@ -6,8 +6,10 @@ ActiveRecord::Schema.define do
     t.string :email
     t.string :first_name
     t.string :last_name
+    t.integer :an_int
+    t.string :column_with_single_value
 
-    t.timestamps
+    t.timestamps null: false
   end
 
   create_table :addresses, :force => true do |t|
@@ -18,26 +20,26 @@ ActiveRecord::Schema.define do
     t.string :state
     t.string :country
 
-    t.timestamps
+    t.timestamps null: false
   end
 
   create_table :purchased_orders, :force => true do |t|
     t.string :foo
     t.string :bar
 
-    t.timestamps
+    t.timestamps null: false
   end
 
   create_table :statistics_requests, :force => true do |t|
     t.string :baz
 
-    t.timestamps
+    t.timestamps null: false
   end
 
   create_table :statistics_sessions, :force => true do |t|
     t.string :foo
     t.integer :bar
 
-    t.timestamps
+    t.timestamps null: false
   end
 end

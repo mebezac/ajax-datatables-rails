@@ -187,6 +187,22 @@ module AjaxDatatablesRails
         options = %w(desc asc)
         options.include?(item[:dir]) ? item[:dir].upcase : 'ASC'
       end
+
+      def default_additional_sort(records)
+        if config.default_additional_sort
+          config.default_additional_sort.split(',').inject(records) do |sorted, column_spec|
+            column_name, order = column_spec.split('.')
+            order ||= 'ASC'
+            if sorted.column_names.include?(column_name)
+              sorted.order(column_name.to_sym => order)
+            else
+              sorted
+            end
+          end
+        else
+          records
+        end
+      end
     end
   end
 end

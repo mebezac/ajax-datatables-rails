@@ -12,6 +12,10 @@ describe AjaxDatatablesRails do
       it "should have custom value" do
         expect(AjaxDatatablesRails.config.db_adapter).to eq(:mysql)
       end
+
+      it "should default the additional sort to nil" do
+        expect(AjaxDatatablesRails.config.default_additional_sort).to be_nil
+      end
     end
   end
 end
