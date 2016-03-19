@@ -27,6 +27,12 @@ def sample_params
             "value"=>"", "regex"=>"false"
           }
         },
+        "4"=> {
+          "data"=>"4", "name"=>"", "searchable"=>"false", "orderable"=>"true",
+          "search"=> {
+            "value"=>"", "regex"=>"false"
+          }
+        }
       },
       "order"=> {
         "0"=> {"column"=>"0", "dir"=>"asc"}
@@ -39,10 +45,20 @@ def sample_params
   )
 end
 
+def create_many_sample_users
+  50.times.map do |n|
+    username = n % 2 == 0         \
+      ? "johndoe#{ "%02d" % n }"  \
+      : "msmith#{ "%02d" % n }"
+    email = "#{username}@example.com"
+    User.new(username: username, email: email, column_with_single_value: '000000|TBD', an_int: n)
+  end.shuffle.each(&:save!)
+end
+
 class SampleDatatable < AjaxDatatablesRails::Base
   def view_columns
     @view_columns ||= [
-      'User.username', 'User.email', 'User.first_name', 'User.last_name'
+      'User.username', 'User.email', 'User.first_name', 'User.last_name', 'User.column_with_single_value'
     ]
   end
 
@@ -53,4 +69,8 @@ class SampleDatatable < AjaxDatatablesRails::Base
   def get_raw_records
     User.all
   end
+end
+
+class ActiveRecordSampleDatatable < SampleDatatable
+  include AjaxDatatablesRails::ORM::ActiveRecord
 end

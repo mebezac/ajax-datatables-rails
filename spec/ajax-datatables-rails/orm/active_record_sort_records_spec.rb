@@ -5,13 +5,7 @@ describe 'AjaxDatatablesRails::ORM::ActiveRecord#sort_records' do
   let(:datatable) { SampleDatatable.new(view) }
 
   before(:each) do
-    AjaxDatatablesRails.configure do |config|
-      config.db_adapter = :sqlite
-      config.orm = :active_record
-    end
-
-    User.create(username: 'johndoe', email: 'johndoe@example.com')
-    User.create(username: 'msmith', email: 'mary.smith@example.com')
+    create_many_sample_users
   end
 
   after(:each) do
@@ -24,8 +18,8 @@ describe 'AjaxDatatablesRails::ORM::ActiveRecord#sort_records' do
     it 'returns a records collection sorted by :order params' do
       # set to order Users by email in descending order
       datatable.params[:order]['0'] = { column: '1', dir: 'desc' }
-      expect(datatable.send(:sort_records, records).map(&:email)).to match(
-        ['mary.smith@example.com', 'johndoe@example.com']
+      expect(datatable.send(:sort_records, records).limit(2).map(&:email)).to match(
+        ["msmith49@example.com", "msmith47@example.com"]
       )
     end
 

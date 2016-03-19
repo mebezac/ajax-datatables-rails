@@ -6,11 +6,6 @@ describe 'AjaxDatatablesRails::ORM::ActiveRecord#fetch_records' do
     let(:datatable) { SampleDatatable.new(view) }
 
     before(:each) do
-      AjaxDatatablesRails.configure do |config|
-        config.db_adapter = :sqlite
-        config.orm = :active_record
-      end
-
       User.create(username: 'johndoe', email: 'johndoe@example.com')
       User.create(username: 'msmith', email: 'mary.smith@example.com')
     end

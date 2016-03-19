@@ -50,6 +50,7 @@ module AjaxDatatablesRails
       records = fetch_records
       records = filter_records(records) if params[:search].present?
       records = sort_records(records) if params[:order].present?
+      records = default_additional_sort(records)
       records = paginate_records(records) unless params[:length].present? && params[:length] == '-1'
       records
     end
@@ -66,6 +67,10 @@ module AjaxDatatablesRails
     end
 
     def filter_records(records)
+      fail orm_extension_error_text
+    end
+
+    def default_additional_sort(records)
       fail orm_extension_error_text
     end
 
